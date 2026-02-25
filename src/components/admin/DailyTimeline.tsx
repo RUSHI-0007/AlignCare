@@ -1,0 +1,137 @@
+// src/components/admin/DailyTimeline.tsx
+'use client';
+
+import { motion } from 'framer-motion';
+import { formatSlotDisplay } from '@/core/services/appointment.service';
+import { useAdminStore } from '@/store/useAdminStore';
+import AppointmentBlock from './AppointmentBlock';
+import { Plus, Lock } from 'lucide-react';
+import { AppointmentStatus, ServiceType } from '@/types/appointment.types';
+import { useMemo } from 'react';
+
+interface AppointmentType {
+    id: string;
+    appointment_time: string;
+    status: AppointmentStatus;
+    service_type: ServiceType;
+    visit_type: string;
+    notes?: string;
+    patients?: { full_name: string; phone: string };
+}
+
+interface DailyTimelineProps {
+    dateStr: string;
+    appointments: AppointmentType[];
+    allSlots: string[];
+    bookedTimes: string[];
+    blockedTimes: string[];
+}
+
+export default function DailyTimeline({ dateStr, appointments, allSlots, bookedTimes, blockedTimes }: DailyTimelineProps) {
+    const openWalkInModal = useAdminStore((state) => state.openWalkInModal);
+
+    // O(1) Lookups exactly as required by architecture
+    const apptByTime = useMemo(() => {
+        return Object.fromEntries(appointments.map(a => [a.appointment_time, a]));
+    }, [appointments]);
+
+    const blockedSet = useMemo(() => new Set(blockedTimes), [blockedTimes]);
+
+    const morningSlots = allSlots.filter(s => parseInt(s.split(':')[0]) < 13);
+    const eveningSlots = allSlots.filter(s => parseInt(s.split(':')[0]) >= 16);
+
+    const renderSlot = (timeStr: string, index: number) => {
+        const isBlocked = blockedSet.has(timeStr);
+        const appt = apptByTime[timeStr];
+
+        if (isBlocked) {
+            return (
+                <motion.div
+                    key={timeStr}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.04 }}
+                    className="flex flex-col justify-center items-center h-[160px] bg-red-500/5 border border-red-500/10 rounded-xl"
+                >
+                    <Lock className="w-5 h-5 text-red-500/50 mb-2" />
+                    <span className="text-[#94A3B8] font-mono text-sm">{formatSlotDisplay(timeStr)}</span>
+                    <span className="text-red-500/70 text-xs font-medium uppercase tracking-wider mt-1">Blocked</span>
+                </motion.div>
+            );
+        }
+
+        if (appt) {
+            return (
+                <motion.div
+                    key={timeStr}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.04 }}
+                    className="h-[160px]"
+                >
+                    <AppointmentBlock appointment={appt} />
+                </motion.div>
+            );
+        }
+
+        // Available State
+        return (
+            <motion.div
+                key={timeStr}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.04 }}
+                onClick={() => openWalkInModal(timeStr)}
+                className="group cursor-pointer flex flex-col justify-center items-center h-[160px] bg-[#10B981]/5 border border-[#10B981]/10 rounded-xl hover:bg-[#10B981]/10 hover:border-[#10B981]/30 transition-all duration-300"
+            >
+                <span className="text-[#F8FAFC] font-mono text-sm mb-2">{formatSlotDisplay(timeStr)}</span>
+                <div className="flex items-center space-x-1 text-[#10B981]">
+                    <Plus className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity -ml-5 group-hover:ml-0" />
+                    <span className="text-xs font-medium uppercase tracking-wider">Available</span>
+                </div>
+            </motion.div>
+        );
+    };
+
+    return (
+        <div className="bg-[#111827]/80 backdrop-blur-md rounded-3xl p-8 border border-white/5 shadow-2xl">
+            <div className="flex items-center justify-between mb-8">
+                <h2 className="text-xl font-bold text-[#F8FAFC]">Daily Timeline</h2>
+                <button
+                    onClick={() => openWalkInModal()}
+                    className="flex items-center space-x-2 bg-[#2DD4BF]/10 text-[#2DD4BF] hover:bg-[#2DD4BF]/20 px-4 py-2 rounded-xl transition-colors font-medium text-sm border border-[#2DD4BF]/20"
+                >
+                    <Plus className="w-4 h-4" />
+                    <span>Quick Walk-in</span>
+                </button>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                {/* Morning Column */}
+                <div>
+                    <h3 className="text-[#94A3B8] font-medium mb-6 flex items-center uppercase tracking-wider text-sm">
+                        <span className="w-2 h-2 rounded-full bg-amber-400 mr-2" />
+                        Morning Shift
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {morningSlots.map((slot, i) => renderSlot(slot, i))}
+                    </div>
+                </div>
+
+                {/* Evening Column */}
+                <div className="relative">
+                    {/* Vertical Divider for Desktop */}
+                    <div className="hidden lg:block absolute -left-6 top-0 bottom-0 w-px bg-white/5" />
+
+                    <h3 className="text-[#94A3B8] font-medium mb-6 flex items-center uppercase tracking-wider text-sm">
+                        <span className="w-2 h-2 rounded-full bg-indigo-400 mr-2" />
+                        Evening Shift
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {eveningSlots.map((slot, i) => renderSlot(slot, i))}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
