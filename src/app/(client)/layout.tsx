@@ -1,4 +1,4 @@
-import GlassNavbar from "@/components/ui/GlassNavbar";
+import { Header } from "@/components/ui/header-2";
 
 export default function ClientLayout({
     children,
@@ -6,11 +6,12 @@ export default function ClientLayout({
     children: React.ReactNode;
 }) {
     return (
-        <div className="relative min-h-screen bg-primary-background">
-            <GlassNavbar />
+        <div className="relative min-h-screen bg-cream-50 text-clinic-navy">
+            <Header />
             <main className="relative z-10">
                 {children}
             </main>
         </div>
     );
 }
+

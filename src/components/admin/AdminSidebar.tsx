@@ -30,10 +30,10 @@ export default function AdminSidebar() {
     };
 
     return (
-        <aside className="fixed left-0 top-0 h-screen w-[240px] bg-[#111827]/80 backdrop-blur-xl border-r border-white/10 flex flex-col z-40">
+        <aside className="fixed left-0 top-0 h-screen w-[240px] bg-white border-r border-slate-200 shadow-sm flex flex-col z-40">
             <div className="p-6">
-                <h2 className="text-xl font-bold text-[#F8FAFC]">Aligncare</h2>
-                <p className="text-sm text-[#2DD4BF]">Admin Portal</p>
+                <h2 className="text-xl font-bold text-slate-900">Aligncare</h2>
+                <p className="text-sm text-indigo-600">Admin Portal</p>
             </div>
 
             <nav className="flex-1 px-4 space-y-2 mt-4 relative">
@@ -47,13 +47,13 @@ export default function AdminSidebar() {
                             href={item.href}
                             className={cn(
                                 "relative flex items-center space-x-3 px-4 py-3 rounded-xl transition-colors z-10 block",
-                                isActive ? "text-[#2DD4BF]" : "text-[#94A3B8] hover:text-[#F8FAFC] hover:bg-white/5"
+                                isActive ? "text-indigo-600" : "text-slate-500 hover:text-indigo-600 hover:bg-slate-50"
                             )}
                         >
                             {isActive && (
                                 <motion.div
                                     layoutId="active-indicator"
-                                    className="absolute inset-0 bg-[#2DD4BF]/10 border-l-2 border-[#2DD4BF] rounded-xl z-0 pointer-events-none"
+                                    className="absolute inset-0 bg-indigo-50 border-l-2 border-indigo-600 rounded-xl z-0 pointer-events-none"
                                     transition={{ type: "spring", stiffness: 300, damping: 30 }}
                                 />
                             )}
@@ -64,19 +64,19 @@ export default function AdminSidebar() {
                 })}
             </nav>
 
-            <div className="p-4 border-t border-white/10 mt-auto">
+            <div className="p-4 border-t border-slate-200 mt-auto">
                 <div className="flex items-center space-x-3 mb-4 px-2">
-                    <div className="w-10 h-10 rounded-full bg-[#3B82F6]/20 flex items-center justify-center text-[#3B82F6] font-bold">
+                    <div className="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 font-bold border border-indigo-100">
                         AD
                     </div>
                     <div>
-                        <p className="text-sm font-medium text-[#F8FAFC]">Admin User</p>
-                        <p className="text-xs text-[#94A3B8]">admin@aligncare.in</p>
+                        <p className="text-sm font-medium text-slate-900">Admin User</p>
+                        <p className="text-xs text-slate-500">admin@aligncare.in</p>
                     </div>
                 </div>
                 <button
                     onClick={handleLogout}
-                    className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-[#94A3B8] transition-colors hover:text-red-400 hover:bg-red-500/10"
+                    className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-slate-500 transition-colors hover:text-red-500 hover:bg-red-50"
                 >
                     <LogOut className="w-5 h-5" />
                     <span className="font-medium">Logout</span>

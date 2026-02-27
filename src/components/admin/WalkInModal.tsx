@@ -13,10 +13,11 @@ import { generateRawSlots } from '@/core/services/appointment.service';
 
 interface WalkInModalProps {
     dateStr: string;
-    availableSlots: string[];
+    bookedTimes: string[];
+    blockedTimes: string[];
 }
 
-export default function WalkInModal({ dateStr, availableSlots }: WalkInModalProps) {
+export default function WalkInModal({ dateStr, bookedTimes, blockedTimes }: WalkInModalProps) {
     const router = useRouter();
     const { isWalkInModalOpen, closeWalkInModal, preSelectedTimeForWalkIn } = useAdminStore();
 
@@ -33,7 +34,8 @@ export default function WalkInModal({ dateStr, availableSlots }: WalkInModalProp
     useEffect(() => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
         if (isWalkInModalOpen) {
-            setSelectedTime(preSelectedTimeForWalkIn || availableSlots[0] || null);
+            const firstAvail = generateRawSlots().find(s => !bookedTimes.includes(s) && !blockedTimes.includes(s));
+            setSelectedTime(preSelectedTimeForWalkIn || firstAvail || null);
             setPatientName('');
             setPatientPhone('');
             setNotes('');
@@ -41,7 +43,7 @@ export default function WalkInModal({ dateStr, availableSlots }: WalkInModalProp
             setStatus('idle');
             setErrorMessage('');
         }
-    }, [isWalkInModalOpen, preSelectedTimeForWalkIn, availableSlots]);
+    }, [isWalkInModalOpen, preSelectedTimeForWalkIn, bookedTimes, blockedTimes]);
 
     // Derived from the array so we can show morning vs evening visually
     const allSlots = generateRawSlots(); // render all, disable unavailable
@@ -104,24 +106,24 @@ export default function WalkInModal({ dateStr, availableSlots }: WalkInModalProp
                     animate={{ scale: 1, y: 0, opacity: 1 }}
                     exit={{ scale: 0.95, y: 20, opacity: 0 }}
                     transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                    className="relative w-full max-w-lg bg-[#111827] border border-white/10 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+                    className="relative w-full max-w-lg bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
                 >
                     {/* Header */}
-                    <div className="flex items-center justify-between p-6 border-b border-white/5 bg-white/[0.02]">
+                    <div className="flex items-center justify-between p-6 border-b border-slate-100 bg-slate-50">
                         <div className="flex items-center space-x-3">
-                            <div className="p-2 bg-[#2DD4BF]/10 rounded-xl text-[#2DD4BF]">
+                            <div className="p-2 bg-indigo-50 border border-indigo-100 rounded-xl text-indigo-600">
                                 <UserPlus className="w-5 h-5" />
                             </div>
                             <div>
-                                <h3 className="text-lg font-bold text-[#F8FAFC]">Add Walk-in</h3>
-                                <p className="text-xs text-[#94A3B8]">
+                                <h3 className="text-lg font-bold text-slate-900">Add Walk-in</h3>
+                                <p className="text-xs text-slate-500">
                                     {new Date(dateStr).toLocaleDateString('en-IN', { weekday: 'long', month: 'long', day: 'numeric' })}
                                 </p>
                             </div>
                         </div>
                         <button
                             onClick={closeWalkInModal}
-                            className="p-2 text-[#94A3B8] hover:text-[#F8FAFC] hover:bg-white/5 rounded-xl transition-colors"
+                            className="p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors"
                         >
                             <X className="w-5 h-5" />
                         </button>
@@ -134,27 +136,27 @@ export default function WalkInModal({ dateStr, availableSlots }: WalkInModalProp
                                 <motion.div
                                     initial={{ scale: 0 }}
                                     animate={{ scale: 1 }}
-                                    className="w-16 h-16 rounded-full bg-[#10B981]/20 flex items-center justify-center text-[#10B981] mb-6"
+                                    className="w-16 h-16 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 mb-6"
                                 >
                                     <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                                     </svg>
                                 </motion.div>
-                                <h4 className="text-xl font-bold text-[#F8FAFC] mb-2">Walk-in Confirmed</h4>
-                                <p className="text-[#94A3B8]">Patient has been added to the timeline.</p>
+                                <h4 className="text-xl font-bold text-slate-900 mb-2">Walk-in Confirmed</h4>
+                                <p className="text-slate-500">Patient has been added to the timeline.</p>
                             </div>
                         ) : (
                             <form onSubmit={handleSubmit} className="space-y-6">
                                 {/* Slot Selector */}
                                 <div>
-                                    <label className="block text-sm font-medium text-[#94A3B8] mb-3">Select Time Slot</label>
+                                    <label className="block text-sm font-medium text-slate-700 mb-3">Select Time Slot</label>
 
                                     <div className="space-y-4">
                                         <div>
-                                            <p className="text-xs text-[#94A3B8] mb-2 uppercase tracking-wider">Morning</p>
+                                            <p className="text-xs text-slate-500 mb-2 uppercase tracking-wider">Morning</p>
                                             <div className="grid grid-cols-4 gap-2">
                                                 {morningSlots.map(slot => {
-                                                    const isAvail = availableSlots.includes(slot);
+                                                    const isAvail = !bookedTimes.includes(slot) && !blockedTimes.includes(slot);
                                                     const isSelected = selectedTime === slot;
                                                     return (
                                                         <button
@@ -165,10 +167,10 @@ export default function WalkInModal({ dateStr, availableSlots }: WalkInModalProp
                                                             className={cn(
                                                                 "py-2 text-xs font-mono font-medium rounded-lg border transition-all",
                                                                 isSelected
-                                                                    ? "bg-[#2DD4BF] border-[#2DD4BF] text-[#0B1120] shadow-[0_0_15px_rgba(45,212,191,0.3)]"
+                                                                    ? "bg-indigo-600 border-indigo-600 text-white shadow-md shadow-indigo-500/20"
                                                                     : isAvail
-                                                                        ? "bg-[#10B981]/10 border-[#10B981]/20 text-[#10B981] hover:bg-[#10B981]/20"
-                                                                        : "bg-red-500/5 border-red-500/10 text-red-500/40 cursor-not-allowed opacity-50"
+                                                                        ? "bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100"
+                                                                        : "bg-rose-50 border-rose-100 text-rose-400 cursor-not-allowed opacity-50"
                                                             )}
                                                         >
                                                             {formatSlotDisplay(slot)}
@@ -178,10 +180,10 @@ export default function WalkInModal({ dateStr, availableSlots }: WalkInModalProp
                                             </div>
                                         </div>
                                         <div>
-                                            <p className="text-xs text-[#94A3B8] mb-2 uppercase tracking-wider">Evening</p>
+                                            <p className="text-xs text-slate-500 mb-2 uppercase tracking-wider">Evening</p>
                                             <div className="grid grid-cols-4 gap-2">
                                                 {eveningSlots.map(slot => {
-                                                    const isAvail = availableSlots.includes(slot);
+                                                    const isAvail = !bookedTimes.includes(slot) && !blockedTimes.includes(slot);
                                                     const isSelected = selectedTime === slot;
                                                     return (
                                                         <button
@@ -192,10 +194,10 @@ export default function WalkInModal({ dateStr, availableSlots }: WalkInModalProp
                                                             className={cn(
                                                                 "py-2 text-xs font-mono font-medium rounded-lg border transition-all",
                                                                 isSelected
-                                                                    ? "bg-[#2DD4BF] border-[#2DD4BF] text-[#0B1120] shadow-[0_0_15px_rgba(45,212,191,0.3)]"
+                                                                    ? "bg-indigo-600 border-indigo-600 text-white shadow-md shadow-indigo-500/20"
                                                                     : isAvail
-                                                                        ? "bg-[#10B981]/10 border-[#10B981]/20 text-[#10B981] hover:bg-[#10B981]/20"
-                                                                        : "bg-red-500/5 border-red-500/10 text-red-500/40 cursor-not-allowed opacity-50"
+                                                                        ? "bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100"
+                                                                        : "bg-rose-50 border-rose-100 text-rose-400 cursor-not-allowed opacity-50"
                                                             )}
                                                         >
                                                             {formatSlotDisplay(slot)}
@@ -207,7 +209,7 @@ export default function WalkInModal({ dateStr, availableSlots }: WalkInModalProp
                                     </div>
                                 </div>
 
-                                <div className="space-y-4 pt-4 border-t border-white/5">
+                                <div className="space-y-4 pt-4 border-t border-slate-100">
                                     <div className="relative">
                                         <input
                                             type="text"
@@ -215,45 +217,45 @@ export default function WalkInModal({ dateStr, availableSlots }: WalkInModalProp
                                             required
                                             value={patientName}
                                             onChange={(e) => setPatientName(e.target.value)}
-                                            className="block w-full px-4 pt-6 pb-2 text-base text-[#F8FAFC] bg-white/5 border border-white/10 rounded-xl appearance-none focus:outline-none focus:ring-0 focus:border-[#2DD4BF] peer transition-colors"
+                                            className="block w-full px-4 pt-6 pb-2 text-base text-slate-900 bg-slate-50 border border-slate-200 rounded-xl appearance-none focus:outline-none focus:ring-0 focus:border-indigo-500 peer transition-colors"
                                             placeholder=" "
                                         />
                                         <label
                                             htmlFor="patientName"
-                                            className="absolute text-sm text-[#94A3B8] duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] left-4 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 peer-focus:text-[#2DD4BF]"
+                                            className="absolute text-sm text-slate-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] left-4 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 peer-focus:text-indigo-600"
                                         >
                                             Patient Full Name
                                         </label>
                                     </div>
 
                                     <div className="relative">
-                                        <span className="absolute left-4 top-4 text-[#94A3B8]">+91</span>
+                                        <span className="absolute left-4 top-4 text-slate-400">+91</span>
                                         <input
                                             type="tel"
                                             id="patientPhone"
                                             required
                                             value={patientPhone}
                                             onChange={handlePhoneChange}
-                                            className="block w-full pl-12 pr-4 pt-6 pb-2 text-base text-[#F8FAFC] bg-white/5 border border-white/10 rounded-xl appearance-none focus:outline-none focus:ring-0 focus:border-[#2DD4BF] peer transition-colors"
+                                            className="block w-full pl-12 pr-4 pt-6 pb-2 text-base text-slate-900 bg-slate-50 border border-slate-200 rounded-xl appearance-none focus:outline-none focus:ring-0 focus:border-indigo-500 peer transition-colors"
                                             placeholder=" "
                                         />
                                         <label
                                             htmlFor="patientPhone"
-                                            className="absolute text-sm text-[#94A3B8] duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] left-12 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 peer-focus:text-[#2DD4BF]"
+                                            className="absolute text-sm text-slate-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] left-12 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 peer-focus:text-indigo-600"
                                         >
                                             Phone Number
                                         </label>
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-[#94A3B8] mb-2">Service Type</label>
+                                        <label className="block text-sm font-medium text-slate-700 mb-2">Service Type</label>
                                         <select
                                             value={serviceType}
                                             onChange={(e) => setServiceType(e.target.value as any)}
-                                            className="block w-full px-4 py-3 text-base text-[#F8FAFC] bg-white/5 border border-white/10 rounded-xl focus:outline-none focus:border-[#2DD4BF] transition-colors appearance-none"
+                                            className="block w-full px-4 py-3 text-base text-slate-900 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 transition-colors appearance-none"
                                         >
-                                            <option value="PHYSIOTHERAPY" className="bg-[#0B1120]">Physiotherapy</option>
-                                            <option value="CANCER_REHAB" className="bg-[#0B1120]">Cancer Rehab</option>
+                                            <option value="PHYSIOTHERAPY" className="bg-white text-slate-900">Physiotherapy</option>
+                                            <option value="CANCER_REHAB" className="bg-white text-slate-900">Cancer Rehab</option>
                                         </select>
                                     </div>
 
@@ -263,12 +265,12 @@ export default function WalkInModal({ dateStr, availableSlots }: WalkInModalProp
                                             value={notes}
                                             onChange={(e) => setNotes(e.target.value)}
                                             rows={2}
-                                            className="block w-full px-4 pt-6 pb-2 text-base text-[#F8FAFC] bg-white/5 border border-white/10 rounded-xl appearance-none focus:outline-none focus:ring-0 focus:border-[#2DD4BF] peer transition-colors resize-none custom-scrollbar"
+                                            className="block w-full px-4 pt-6 pb-2 text-base text-slate-900 bg-slate-50 border border-slate-200 rounded-xl appearance-none focus:outline-none focus:ring-0 focus:border-indigo-500 peer transition-colors resize-none custom-scrollbar"
                                             placeholder=" "
                                         />
                                         <label
                                             htmlFor="notes"
-                                            className="absolute text-sm text-[#94A3B8] duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] left-4 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 peer-focus:text-[#2DD4BF]"
+                                            className="absolute text-sm text-slate-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] left-4 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 peer-focus:text-indigo-600"
                                         >
                                             Admin Notes (Optional)
                                         </label>
@@ -292,7 +294,7 @@ export default function WalkInModal({ dateStr, availableSlots }: WalkInModalProp
                                     <button
                                         type="submit"
                                         disabled={status === 'loading' || !selectedTime || patientName.length < 2 || patientPhone.length !== 10}
-                                        className="w-full flex justify-center items-center py-4 px-4 border border-transparent rounded-xl shadow-sm text-sm font-bold text-[#0B1120] bg-[#2DD4BF] hover:bg-[#2DD4BF]/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#2DD4BF] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                                        className="w-full flex justify-center items-center py-4 px-4 border border-transparent rounded-xl shadow-sm text-sm font-bold text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                                     >
                                         {status === 'loading' ? (
                                             <Loader2 className="w-5 h-5 animate-spin" />

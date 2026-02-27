@@ -15,30 +15,26 @@ const IST_OFFSET_MINUTES = 330; // UTC+5:30
 // Change this one value to update the buffer platform-wide.
 export const BOOKING_LEAD_TIME_MINUTES = 120; // 2-hour minimum buffer for public bookings
 
-// ─── IST TIME UTILITIES ───────────────────────────────────────────────────
-
-/**
- * getNowIST()
- * Returns current time as a Date normalized to IST.
- * MUST be used for all time comparisons — Vercel/Node servers run UTC.
- * Using new Date() directly will produce wrong slot filtering for Indian users.
- */
-export function getNowIST(): Date {
-    const now = new Date();
-    const utcMs = now.getTime() + now.getTimezoneOffset() * 60000;
-    return new Date(utcMs + IST_OFFSET_MINUTES * 60000);
-}
-
 /**
  * getTodayIST()
  * Returns today's date string in YYYY-MM-DD format, normalized to IST.
  */
 export function getTodayIST(): string {
-    const ist = getNowIST();
-    const y = ist.getFullYear();
-    const m = String(ist.getMonth() + 1).padStart(2, '0');
-    const d = String(ist.getDate()).padStart(2, '0');
-    return `${y}-${m}-${d}`;
+    const now = new Date();
+    const istOffset = 5.5 * 60 * 60 * 1000;
+    const istDate = new Date(now.getTime() + now.getTimezoneOffset() * 60000 + istOffset);
+    return istDate.toISOString().split('T')[0];
+}
+
+/**
+ * getNowIST()
+ * Returns current time as a Date normalized to IST.
+ * MUST be used for all time comparisons — Vercel/Node servers run UTC.
+ */
+export function getNowIST(): Date {
+    const now = new Date();
+    const istOffset = 5.5 * 60 * 60 * 1000;
+    return new Date(now.getTime() + now.getTimezoneOffset() * 60000 + istOffset);
 }
 
 /**

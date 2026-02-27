@@ -1,57 +1,105 @@
-'use client';
+"use client";
+import { motion } from "framer-motion";
+import { TestimonialsColumn, type TestimonialItem } from "./testimonials-columns-1";
 
-import { motion } from 'framer-motion';
-
-const testimonials = [
-    { id: 1, name: 'Sarah J.', role: 'Post-Surgery Patient', text: 'The physiotherapy team got me back on my feet faster than I ever thought possible. The 3D movement analysis is incredible.' },
-    { id: 2, name: 'Michael T.', role: 'Marathon Runner', text: 'Aligncare identified muscle imbalances I didn\'t know I had. My recovery times have halved since starting treatment.' },
-    { id: 3, name: 'Elena R.', role: 'Cancer Survivor', text: 'The cancer rehab program is handled with so much empathy. They didn\'t just rebuild my strength, they rebuilt my confidence.' },
-    { id: 4, name: 'David K.', role: 'Home Visit Client', text: 'Having premium clinic-level care in my own living room while recovering from hip surgery was a game-changer.' },
-    { id: 5, name: 'Priya M.', role: 'Corporate Athlete', text: 'Fixed my chronic back pain after years of desk work. The personalized approach and futuristic tech make it worth every penny.' },
+const testimonials: TestimonialItem[] = [
+    {
+        text: "After my knee replacement I was scared to even stand. The team here made me feel completely safe from day one. Within 6 weeks I was walking unaided. I cannot thank Aligncare enough.",
+        image: "https://randomuser.me/api/portraits/women/44.jpg",
+        name: "Priya Sharma",
+        role: "Post-Surgery Recovery, Pune",
+    },
+    {
+        text: "My oncologist referred me here after chemotherapy. The rehab programme was built exactly around my situation — they treated me like family, not a patient number.",
+        image: "https://randomuser.me/api/portraits/men/32.jpg",
+        name: "Rajesh Kulkarni",
+        role: "Cancer Survivor",
+    },
+    {
+        text: "I had a chronic IT band issue for two years. The physiotherapy team pinpointed things no one else had. Back running in 8 weeks. Genuinely brilliant.",
+        image: "https://randomuser.me/api/portraits/women/68.jpg",
+        name: "Anita Desai",
+        role: "Marathon Runner",
+    },
+    {
+        text: "My father had a stroke at 72 and we could not transport him. The home visit physiotherapy was clinic-quality — same equipment, same expertise. Truly exceptional.",
+        image: "https://randomuser.me/api/portraits/men/75.jpg",
+        name: "Vikram Mehta",
+        role: "Home Visit Client",
+    },
+    {
+        text: "Years of desk work destroyed my lower back. The personalised protocol they built changed my life. I sleep properly for the first time in years.",
+        image: "https://randomuser.me/api/portraits/women/90.jpg",
+        name: "Sunita Patil",
+        role: "Working Professional",
+    },
+    {
+        text: "My daughter had a sports injury before her board exams. Aligncare's rapid rehab plan had her back to training in 3 weeks without missing a single class.",
+        image: "https://randomuser.me/api/portraits/men/52.jpg",
+        name: "Suresh Iyer",
+        role: "Parent of a Patient",
+    },
+    {
+        text: "The cancer rehab programme gave me back my strength and my confidence after surgery. Every session felt purposeful, never clinical.",
+        image: "https://randomuser.me/api/portraits/women/22.jpg",
+        name: "Kavita Rao",
+        role: "Breast Cancer Rehab",
+    },
+    {
+        text: "Professional, warm, and deeply knowledgeable. The home visit service for my elderly mother was a genuine lifeline for our family.",
+        image: "https://randomuser.me/api/portraits/women/55.jpg",
+        name: "Deepa Nair",
+        role: "Family Caregiver",
+    },
+    {
+        text: "I was referred by three different doctors. Every one of them was right. The results speak for themselves — I'm pain-free for the first time in four years.",
+        image: "https://randomuser.me/api/portraits/men/15.jpg",
+        name: "Amit Bhosale",
+        role: "Chronic Pain Patient",
+    },
 ];
 
+const firstColumn = testimonials.slice(0, 3);
+const secondColumn = testimonials.slice(3, 6);
+const thirdColumn = testimonials.slice(6, 9);
+
 export default function TestimonialMarquee() {
-    // Duplicate the array to create a seamless infinite loop
-    const marqueeItems = [...testimonials, ...testimonials];
-
     return (
-        <section className="py-24 bg-secondary-card/30 border-y border-white/5 overflow-hidden relative">
-            <div className="max-w-7xl mx-auto px-6 mb-12">
-                <h3 className="text-2xl font-bold text-white text-center">Trusted by patients worldwide</h3>
-            </div>
-
-            {/* Left/Right fading edges so marquee blends in */}
-            <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-primary-background to-transparent z-10 pointer-events-none" />
-            <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-primary-background to-transparent z-10 pointer-events-none" />
-
-            <div className="flex w-fit">
+        // ONLY dark section on the page — earns trust through contrast
+        <section className="relative overflow-hidden py-24 px-6" style={{ backgroundColor: "#0F1E3C" }}>
+            <div className="max-w-6xl mx-auto">
+                {/* Section header */}
                 <motion.div
-                    className="flex gap-6 pr-6"
-                    animate={{ x: '-50%' }}
-                    transition={{
-                        duration: 40,
-                        repeat: Infinity,
-                        ease: 'linear',
-                    }}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                    viewport={{ once: true }}
+                    className="flex flex-col items-center text-center mb-12"
                 >
-                    {marqueeItems.map((item, idx) => (
-                        <div
-                            key={`${item.id}-${idx}`}
-                            className="w-[400px] flex-shrink-0 bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-8 hover:bg-white/10 transition-colors"
-                        >
-                            <div className="flex items-center gap-1 mb-4">
-                                {[...Array(5)].map((_, i) => (
-                                    <svg key={i} xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#2DD4BF" stroke="#2DD4BF" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-star"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
-                                ))}
-                            </div>
-                            <p className="text-slate-300 font-light leading-relaxed mb-6">&quot;{item.text}&quot;</p>
-                            <div className="mt-auto">
-                                <p className="text-white font-medium">{item.name}</p>
-                                <p className="text-healing-teal text-sm">{item.role}</p>
-                            </div>
-                        </div>
-                    ))}
+                    <div className="mb-4 px-4 py-1 rounded-full border text-xs tracking-widest uppercase"
+                        style={{ borderColor: "rgba(45,91,227,0.4)", color: "#B8CCF4", fontFamily: "Plus Jakarta Sans, sans-serif" }}>
+                        What Patients Say
+                    </div>
+                    <h3 className="font-bold"
+                        style={{ fontFamily: "Plus Jakarta Sans, sans-serif", fontSize: "clamp(1.75rem, 3vw, 2.5rem)", color: "#FFFFFF" }}>
+                        Stories of{" "}
+                        <span style={{ color: "#2D5BE3" }}>Recovery</span>
+                    </h3>
+                    <p className="mt-3 text-sm max-w-md"
+                        style={{ fontFamily: "DM Sans, sans-serif", color: "#64748B" }}>
+                        Real patients. Real results. Every story matters.
+                    </p>
                 </motion.div>
+
+                {/* Three vertical scrolling columns — faded top & bottom */}
+                <div
+                    className="flex justify-center gap-6 max-h-[740px] overflow-hidden"
+                    style={{ maskImage: "linear-gradient(to bottom, transparent, black 15%, black 85%, transparent)" }}
+                >
+                    <TestimonialsColumn testimonials={firstColumn} duration={18} />
+                    <TestimonialsColumn testimonials={secondColumn} duration={22} className="hidden md:block" />
+                    <TestimonialsColumn testimonials={thirdColumn} duration={20} className="hidden lg:block" />
+                </div>
             </div>
         </section>
     );

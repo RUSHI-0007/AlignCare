@@ -21,8 +21,8 @@ export default async function DashboardPage() {
         <div className="space-y-8 pb-10">
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold text-[#F8FAFC]">Dashboard</h1>
-                    <p className="text-[#94A3B8] text-sm mt-1">
+                    <h1 className="text-2xl font-bold text-slate-900">Dashboard</h1>
+                    <p className="text-slate-500 text-sm mt-1">
                         {new Date().toLocaleDateString('en-IN', {
                             weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
                             timeZone: 'Asia/Kolkata',
@@ -64,7 +64,7 @@ export default async function DashboardPage() {
             />
 
             {/* WalkInModal is client-side, reads from useAdminStore */}
-            <WalkInModal availableSlots={slotData.available} dateStr={today} />
+            <WalkInModal bookedTimes={slotData.booked} blockedTimes={slotData.blocked} dateStr={today} />
         </div>
     );
 }

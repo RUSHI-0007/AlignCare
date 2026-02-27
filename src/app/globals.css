@@ -1,28 +1,156 @@
+/* ─── Preset F: Aligncare — Google Fonts ─── */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@1,400;1,600&family=DM+Sans:wght@400;500&family=DM+Mono&display=swap');
+
 @import "tailwindcss";
 @config "../../tailwind.config.ts";
 
 @layer base {
   body {
-    @apply bg-primary-background text-white antialiased;
+    @apply antialiased;
+    font-family: 'DM Sans', system-ui, sans-serif;
+    background-color: #FAF7F2;
+    color: #0F1E3C;
   }
-  
-  /* Custom Scrollbar */
+
+  /* Preset F scrollbar */
   ::-webkit-scrollbar {
-    width: 8px;
+    width: 6px;
   }
+
   ::-webkit-scrollbar-track {
-    @apply bg-primary-background;
+    background: #FAF7F2;
   }
+
   ::-webkit-scrollbar-thumb {
-    @apply bg-trust-blue rounded-full;
+    background: #B8CCF4;
+    border-radius: 999px;
   }
+
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-healing-teal;
+    background: #2D5BE3;
   }
 }
 
 @layer utilities {
+
+  /* Indian Warm Glassmorphism */
   .glass {
-    @apply bg-white/5 backdrop-blur-xl border border-white/10;
+    background: rgba(250, 247, 242, 0.75);
+    backdrop-filter: blur(20px) saturate(1.5);
+    border: 1px solid rgba(45, 91, 227, 0.1);
+    box-shadow: 0 8px 32px rgba(15, 30, 60, 0.08);
+  }
+
+  /* Cormorant italic emotional word helper */
+  .emotional-word {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-style: italic;
+    color: #2D5BE3;
+  }
+}
+
+/* ── Hero CSS animations ───────────────────────────────────────────────────── */
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes blobFloat {
+
+  0%,
+  100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+
+  33% {
+    transform: translate(20px, -30px) scale(1.05);
+  }
+
+  66% {
+    transform: translate(-15px, 20px) scale(0.97);
+  }
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-down {
+  animation: fadeInDown 0.8s ease-out forwards;
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.8s ease-out forwards;
+  opacity: 0;
+}
+
+.animation-delay-200 {
+  animation-delay: 0.2s;
+}
+
+.animation-delay-400 {
+  animation-delay: 0.4s;
+}
+
+.animation-delay-600 {
+  animation-delay: 0.6s;
+}
+
+.animation-delay-800 {
+  animation-delay: 0.8s;
+}
+
+/* Stars — drift upward in infinite loop with subtle horizontal drift */
+@keyframes starLoop {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0;
+  }
+
+  5% {
+    opacity: 1;
+  }
+
+  50% {
+    transform: translate(var(--drift, 8%), -50vh) scale(1.1);
+    opacity: 0.85;
+  }
+
+  95% {
+    opacity: 0.2;
+  }
+
+  100% {
+    transform: translate(0, -100vh) scale(0.8);
+    opacity: 0;
   }
 }

@@ -8,56 +8,54 @@ export default function GlassNavbar() {
     const { scrollY } = useScroll();
     const [scrolled, setScrolled] = useState(false);
 
-    useMotionValueEvent(scrollY, "change", (latest) => {
-        if (latest > 50) {
-            setScrolled(true);
-        } else {
-            setScrolled(false);
-        }
-    });
+    useMotionValueEvent(scrollY, "change", (latest) => setScrolled(latest > 50));
 
     return (
         <motion.nav
             initial={{ y: -100 }}
             animate={{ y: 0 }}
             transition={{ duration: 0.5, ease: "easeOut" }}
-            className={`fixed top-4 left-0 right-0 z-50 mx-auto max-w-4xl rounded-full transition-all duration-500 ease-in-out px-6 py-3 flex items-center justify-between ${scrolled
-                    ? "bg-[#0B1120]/60 backdrop-blur-xl border border-white/10"
-                    : "bg-transparent border-transparent"
-                }`}
+            className="fixed top-4 left-0 right-0 z-50 mx-auto max-w-4xl rounded-full transition-all duration-500 ease-in-out px-6 py-3 flex items-center justify-between"
+            style={scrolled ? {
+                background: 'rgba(250, 247, 242, 0.80)',
+                backdropFilter: 'blur(20px) saturate(1.5)',
+                border: '1px solid rgba(45, 91, 227, 0.1)',
+                boxShadow: '0 8px 32px rgba(15, 30, 60, 0.08)',
+            } : {
+                background: 'transparent',
+                border: '1px solid transparent',
+            }}
         >
-            <Link
-                href="/"
-                className={`text-2xl font-bold tracking-tight transition-colors duration-500 ${scrolled ? "text-[#2DD4BF]" : "text-slate-50"
-                    }`}
-            >
-                Aligncare
+            {/* Three-colour wordmark: Align(navy) care(indigo).(teal) */}
+            <Link href="/" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '1.5rem', fontWeight: 700, letterSpacing: '-0.02em' }}>
+                <span style={{ color: '#0F1E3C' }}>Align</span>
+                <span style={{ color: '#2D5BE3' }}>care</span>
+                <span style={{ color: '#0D9488' }}>.</span>
             </Link>
 
             <div className="hidden md:flex items-center gap-8">
-                <Link
-                    href="#services"
-                    className="font-medium text-slate-100 transition-colors hover:text-[#3B82F6]"
-                >
-                    Services
-                </Link>
-                <Link
-                    href="#clinic"
-                    className="font-medium text-slate-100 transition-colors hover:text-[#3B82F6]"
-                >
-                    Clinic
-                </Link>
-                <Link
-                    href="#home-visit"
-                    className="font-medium text-slate-100 transition-colors hover:text-[#3B82F6]"
-                >
-                    Home Visit
-                </Link>
+                {['Services', 'Clinic', 'Home Visit'].map(label => (
+                    <Link key={label}
+                        href={`#${label.toLowerCase().replace(' ', '-')}`}
+                        className="font-medium text-sm transition-colors duration-200"
+                        style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', color: '#0F1E3C' }}
+                        onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = '#2D5BE3'}
+                        onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = '#0F1E3C'}
+                    >
+                        {label}
+                    </Link>
+                ))}
             </div>
 
-            <button className="bg-[#2DD4BF] hover:bg-[#20b8a5] text-[#0B1120] px-6 py-2 rounded-full font-semibold transition-all shadow-[0_0_15px_rgba(45,212,191,0.3)] hover:shadow-[0_0_25px_rgba(45,212,191,0.6)]">
+            {/* Indigo CTA pill */}
+            <Link href="/booking"
+                className="px-5 py-2 rounded-full font-semibold text-sm text-white transition-all duration-200"
+                style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', backgroundColor: '#2D5BE3', boxShadow: '0 2px 12px rgba(45,91,227,0.3)' }}
+                onMouseEnter={e => (e.currentTarget as HTMLElement).style.backgroundColor = '#1E40AF'}
+                onMouseLeave={e => (e.currentTarget as HTMLElement).style.backgroundColor = '#2D5BE3'}
+            >
                 Book Now
-            </button>
+            </Link>
         </motion.nav>
     );
 }

@@ -8,7 +8,7 @@ import {
     generateRawSlots,
 } from '@/core/services/appointment.service';
 import { getBookedTimesFromDB, getBlockedTimesFromDB } from '@/core/services/appointment_db.service';
-import { createClient } from '@/core/db/supabase-server';
+import { createAdminClient } from '@/core/db/supabase-server';
 
 // ─── WALK-IN ──────────────────────────────────────────────────────────────
 
@@ -33,7 +33,7 @@ export async function addWalkInAction(data: {
         // The 2-hour buffer does NOT apply to admin walk-ins.
         validateSlotOrThrow(dateStr, timeStr, bookedTimes, blockedTimes, { skipPastCheck: true });
 
-        const supabase = createClient();
+        const supabase = createAdminClient();
 
         const { data: patient, error: patientError } = await supabase
             .from('patients')
@@ -87,7 +87,7 @@ export async function blockSlotAction(data: {
     timeStr: string;
     reason?: string;
 }) {
-    const supabase = createClient();
+    const supabase = createAdminClient();
     const allSlots = generateRawSlots();
 
     if (!allSlots.includes(data.timeStr)) {
@@ -112,7 +112,7 @@ export async function blockSlotAction(data: {
 // ─── UNBLOCK SLOT ─────────────────────────────────────────────────────────
 
 export async function unblockSlotAction(blockedSlotId: string) {
-    const supabase = createClient();
+    const supabase = createAdminClient();
     const { error } = await supabase.from('blocked_slots').delete().eq('id', blockedSlotId);
     if (error) return { success: false, error: error.message };
 
@@ -125,7 +125,7 @@ export async function unblockSlotAction(blockedSlotId: string) {
 // ─── CANCEL APPOINTMENT ───────────────────────────────────────────────────
 
 export async function cancelAppointmentAction(appointmentId: string) {
-    const supabase = createClient();
+    const supabase = createAdminClient();
     const { error } = await supabase
         .from('appointments')
         .update({ status: 'CANCELLED' })
@@ -143,7 +143,7 @@ export async function cancelAppointmentAction(appointmentId: string) {
 // ─── GET APPOINTMENTS FOR DATE (TIMELINE) ─────────────────────────────────
 
 export async function getAppointmentsForDateAction(dateStr: string) {
-    const supabase = createClient();
+    const supabase = createAdminClient();
 
     const { data, error } = await supabase
         .from('appointments')
@@ -168,12 +168,19 @@ export async function getAppointmentsForDateAction(dateStr: string) {
 
     if (error) return { success: false, error: error.message, data: [] };
 
-    // Supabase returns a single object if it's a 1:1 or N:1 relation, but type inference often thinks it's an array for nested selects.
-    // Force the type cast to satisfy the component prop.
-    const normalizedData = (data ?? []).map(appt => ({
-        ...appt,
-        patients: Array.isArray(appt.patients) ? appt.patients[0] : appt.patients
-    }));
+    // Supabase nested relation returns patients either as object or array depending on schema.
+    // We Map it properly for the DailyTimeline component:
+    const normalizedData = (data ?? []).map((appt: any) => {
+        let patientObj = appt.patients;
+        if (Array.isArray(appt.patients)) {
+            patientObj = appt.patients[0];
+        }
+
+        return {
+            ...appt,
+            patients: patientObj // Ensure it's not an array
+        };
+    });
 
     return { success: true, data: normalizedData as any[] };
 }
@@ -181,7 +188,7 @@ export async function getAppointmentsForDateAction(dateStr: string) {
 // ─── DASHBOARD STATS ──────────────────────────────────────────────────────
 
 export async function getDashboardStatsAction() {
-    const supabase = createClient();
+    const supabase = createAdminClient();
     const { getTodayIST } = await import('@/core/services/appointment.service');
     const { getAvailableSlotsForDate } = await import('@/core/services/appointment_db.service');
     const today = getTodayIST();
@@ -217,7 +224,7 @@ export async function getDashboardStatsAction() {
 // ─── PATIENT LIST ─────────────────────────────────────────────────────────
 
 export async function getPatientsAction(search?: string) {
-    const supabase = createClient();
+    const supabase = createAdminClient();
 
     let query = supabase
         .from('patients')

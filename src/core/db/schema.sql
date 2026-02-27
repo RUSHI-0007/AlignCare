@@ -75,7 +75,7 @@ ALTER TABLE blocked_slots ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "service_role_all_patients"     ON patients      FOR ALL TO service_role USING (true);
 CREATE POLICY "service_role_all_appointments" ON appointments  FOR ALL TO service_role USING (true);
 CREATE POLICY "service_role_all_blocked"      ON blocked_slots FOR ALL TO service_role USING (true);
-CREATE POLICY "public_insert_appointments"    ON appointments  FOR INSERT TO anon      USING (true);
+CREATE POLICY "public_insert_appointments"    ON appointments  FOR INSERT TO anon      WITH CHECK (true);
 
 -- ─── REALTIME ─────────────────────────────────────────────────────────────
 

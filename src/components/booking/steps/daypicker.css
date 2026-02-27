@@ -1,9 +1,11 @@
 /* React Day Picker Custom Styling Variables */
 .calendar-container {
     --rdp-cell-size: 40px;
-    --rdp-accent-color: #2DD4BF;
+    --rdp-accent-color: #2563EB;
+    /* clinic-blue-600 */
     --rdp-background-color: transparent;
-    --rdp-accent-color-dark: #20b8a5;
+    --rdp-accent-color-dark: #1D4ED8;
+    /* clinic-blue-700 */
     --rdp-background-color-dark: transparent;
     --rdp-outline: 2px solid var(--rdp-accent-color);
     --rdp-outline-selected: 2px solid var(--rdp-accent-color);
@@ -16,26 +18,28 @@
 }
 
 .rdp-day:hover:not(.rdp-day_disabled) {
-    background-color: rgba(255, 255, 255, 0.1);
-    color: white;
+    background-color: #EFF6FF;
+    /* clinic-blue-50 */
+    color: #0F172A;
+    /* clinic-navy */
 }
 
 .rdp-day_selected,
 .rdp-day_selected:focus-visible,
 .rdp-day_selected:hover {
     background-color: var(--rdp-accent-color) !important;
-    color: #0B1120 !important;
+    color: #ffffff !important;
     font-weight: 700;
 }
 
 .rdp-button:focus-visible:not(.rdp-day_selected) {
-    background-color: rgba(45, 212, 191, 0.2);
+    background-color: #EFF6FF;
 }
 
 .rdp-head_cell {
-    color: #94a3b8;
-    /* text-slate-400 */
-    font-weight: 500;
+    color: #64748b;
+    /* clinic-muted */
+    font-weight: 600;
     font-size: 0.875rem;
     text-transform: uppercase;
 }

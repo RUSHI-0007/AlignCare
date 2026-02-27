@@ -54,12 +54,12 @@ export default function TimePicker() {
             <div className="flex flex-col md:flex-row gap-8">
 
                 {/* Calendar Picker */}
-                <div className="w-full md:w-1/2 p-6 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-xl">
+                <div className="w-full md:w-1/2 p-6 rounded-3xl bg-white border border-[#E2E8F0] shadow-sm">
                     <div className="flex items-center gap-3 mb-6">
-                        <div className="p-2 bg-healing-teal/10 rounded-lg text-healing-teal">
+                        <div className="p-2 bg-clinic-blue-50 rounded-lg text-clinic-blue-600">
                             <CalendarIcon size={20} />
                         </div>
-                        <h3 className="text-xl font-medium text-white">Select a Date</h3>
+                        <h3 className="text-xl font-medium text-clinic-navy">Select a Date</h3>
                     </div>
 
                     <div className="flex justify-center calendar-container">
@@ -68,23 +68,23 @@ export default function TimePicker() {
                             selected={pickerDate}
                             onSelect={setPickerDate}
                             disabled={{ before: new Date() }} // Disable past dates
-                            className="text-white"
+                            className="text-clinic-navy"
                             modifiersClassNames={{
-                                selected: 'bg-healing-teal text-primary-background font-bold',
-                                today: 'text-trust-blue font-bold',
-                                disabled: 'text-slate-600 cursor-not-allowed hidden',
+                                selected: 'bg-clinic-blue-600 text-white font-bold',
+                                today: 'text-clinic-blue-600 font-bold',
+                                disabled: 'text-slate-300 cursor-not-allowed hidden',
                             }}
                         />
                     </div>
                 </div>
 
                 {/* Time Slots */}
-                <div className="w-full md:w-1/2 p-6 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-xl flex flex-col">
+                <div className="w-full md:w-1/2 p-6 rounded-3xl bg-white border border-[#E2E8F0] shadow-sm flex flex-col">
                     <div className="flex items-center gap-3 mb-6">
-                        <div className="p-2 bg-trust-blue/10 rounded-lg text-trust-blue">
+                        <div className="p-2 bg-clinic-blue-50 rounded-lg text-clinic-blue-600">
                             <Clock size={20} />
                         </div>
-                        <h3 className="text-xl font-medium text-white">Select a Time</h3>
+                        <h3 className="text-xl font-medium text-clinic-navy">Select a Time</h3>
                     </div>
 
                     <div className="flex-grow">
@@ -94,8 +94,8 @@ export default function TimePicker() {
                                 <p>Please select a date first</p>
                             </div>
                         ) : loading ? (
-                            <div className="flex flex-col items-center justify-center h-full text-healing-teal space-y-4 py-12">
-                                <div className="w-8 h-8 border-t-2 border-b-2 border-healing-teal rounded-full animate-spin"></div>
+                            <div className="flex flex-col items-center justify-center h-full text-clinic-blue-600 space-y-4 py-12">
+                                <div className="w-8 h-8 border-t-2 border-b-2 border-clinic-blue-600 rounded-full animate-spin"></div>
                                 <p>Finding available times...</p>
                             </div>
                         ) : slots.length === 0 ? (
@@ -114,8 +114,8 @@ export default function TimePicker() {
                                             className={cn(
                                                 "py-3 px-4 rounded-xl text-sm font-medium transition-all duration-300 border text-center",
                                                 isSelected
-                                                    ? "bg-healing-teal border-healing-teal text-primary-background shadow-[0_0_15px_rgba(45,212,191,0.3)]"
-                                                    : "bg-white/5 border-white/10 text-slate-300 hover:bg-white/10 hover:border-healing-teal/50 hover:text-white"
+                                                    ? "bg-clinic-blue-600 border-clinic-blue-600 text-white shadow-md"
+                                                    : "bg-white border-[#E2E8F0] text-clinic-navy hover:border-clinic-blue-400 hover:shadow-sm"
                                             )}
                                         >
                                             {time}
@@ -128,10 +128,10 @@ export default function TimePicker() {
                 </div>
             </div>
 
-            <div className="flex justify-between pt-6 border-t border-white/10">
+            <div className="flex justify-between pt-6 border-t border-[#E2E8F0]">
                 <button
                     onClick={prevStep}
-                    className="px-6 py-3 rounded-full font-medium transition-all border border-white/10 hover:bg-white/5 text-slate-300 hover:text-white"
+                    className="px-6 py-3 rounded-full font-medium transition-all border border-[#E2E8F0] hover:bg-slate-50 text-clinic-muted hover:text-clinic-navy"
                 >
                     Back
                 </button>
@@ -139,8 +139,8 @@ export default function TimePicker() {
                     onClick={nextStep}
                     disabled={!isValid}
                     className={`px-8 py-3 rounded-full font-semibold transition-all flex items-center gap-2 ${isValid
-                        ? 'bg-healing-teal hover:bg-[#20b8a5] text-primary-background shadow-[0_0_20px_rgba(45,212,191,0.3)]'
-                        : 'bg-white/10 text-slate-500 cursor-not-allowed'
+                        ? 'bg-clinic-blue-600 hover:bg-clinic-blue-700 text-white shadow-md hover:shadow-lg'
+                        : 'bg-slate-200 text-slate-400 cursor-not-allowed'
                         }`}
                 >
                     Continue

@@ -1,121 +1,227 @@
 'use client';
 
-import { useRef, useMemo } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls } from '@react-three/drei';
-import * as THREE from 'three';
+import React, { useRef, useEffect } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
-function ParticleWave() {
-    const pointsRef = useRef<THREE.Points>(null);
+// ─────────────────────────────────────────────────────────────────────────────
+// GLSL: Bright blue sky with flowing white clouds
+// ─────────────────────────────────────────────────────────────────────────────
+const SKY_SHADER = `#version 300 es
+precision highp float;
+out vec4 O;
+uniform vec2 resolution;
+uniform float time;
+#define FC gl_FragCoord.xy
+#define T time
+#define R resolution
 
-    // Create a grid of points
-    const count = 4000;
-    const positions = useMemo(() => {
-        const pos = new Float32Array(count * 3);
-        for (let i = 0; i < count; i++) {
-            const x = (Math.random() - 0.5) * 25;
-            const z = (Math.random() - 0.5) * 25;
-            pos[i * 3] = x;
-            pos[i * 3 + 1] = 0;
-            pos[i * 3 + 2] = z;
-        }
-        return pos;
-    }, [count]);
-
-    useFrame((state) => {
-        const time = state.clock.getElapsedTime();
-        if (pointsRef.current) {
-            const positions = pointsRef.current.geometry.attributes.position.array as Float32Array;
-
-            for (let i = 0; i < count; i++) {
-                const x = positions[i * 3];
-                const z = positions[i * 3 + 2];
-
-                // Wave math for flowing geometry
-                const y = Math.sin(x * 0.4 + time * 0.5) * 0.5 + Math.cos(z * 0.3 + time * 0.5) * 0.5;
-
-                // Subtle mouse reaction
-                // Map cursor (-1 to 1) to (-10 to 10) range
-                const cursorX = state.pointer.x * 10;
-                const cursorZ = -state.pointer.y * 10; // invert y for 3D Z
-
-                const distX = cursorX - x;
-                const distZ = cursorZ - z;
-                const distance = Math.sqrt(distX * distX + distZ * distZ);
-
-                // Push particles up when mouse is near
-                const mouseEffect = Math.max(0, 3 - distance) * 0.8;
-
-                positions[i * 3 + 1] = y + mouseEffect;
-            }
-            pointsRef.current.geometry.attributes.position.needsUpdate = true;
-
-            // Gentle rotation to make the wave feel alive
-            pointsRef.current.rotation.y = time * 0.05;
-        }
-    });
-
-    return (
-        <points ref={pointsRef}>
-            <bufferGeometry>
-                <bufferAttribute
-                    attach="attributes-position"
-                    args={[positions, 3]}
-                />
-            </bufferGeometry>
-            <pointsMaterial
-                size={0.06}
-                color="#2DD4BF"
-                transparent
-                opacity={0.6}
-                sizeAttenuation
-                blending={THREE.AdditiveBlending}
-            />
-        </points>
-    );
+float hash(vec2 p){ p=fract(p*vec2(127.1,311.7)); p+=dot(p,p+74.23); return fract(p.x*p.y); }
+float noise(vec2 p){
+  vec2 i=floor(p), f=fract(p), u=f*f*(3.-2.*f);
+  return mix(mix(hash(i),hash(i+vec2(1,0)),u.x),mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),u.x),u.y);
+}
+float fbm(vec2 p){
+  float v=0., a=0.5; mat2 m=mat2(1.6,1.2,-1.2,1.6);
+  for(int i=0;i<5;i++){ v+=a*noise(p); p=m*p; a*=0.5; }
+  return v;
 }
 
+void main(){
+  vec2 uv = FC / R;
+  // Slow horizontal drift
+  vec2 st = vec2(uv.x * 2.5 + T * 0.04, uv.y * 1.2 - T * 0.008);
+
+  // Layered cloud density
+  float c1 = fbm(st);
+  float c2 = fbm(st * 1.8 + vec2(5.2, 1.3));
+  float cloud = smoothstep(0.38, 0.72, c1 * 0.55 + c2 * 0.45);
+
+  // Sky gradient: deep blue at top → bright azure at centre → light blue at bottom
+  float vert = uv.y;
+  vec3 skyTop    = vec3(0.18, 0.45, 0.82);
+  vec3 skyMid    = vec3(0.38, 0.68, 0.96);
+  vec3 skyBottom = vec3(0.62, 0.82, 0.98);
+  vec3 sky = mix(skyBottom, mix(skyMid, skyTop, vert*vert), vert);
+
+  // Bright white cloud layer
+  vec3 cloudCol = mix(vec3(0.88,0.92,0.98), vec3(1.0,1.0,1.0), cloud);
+
+  // Blend clouds over sky
+  vec3 col = mix(sky, cloudCol, cloud * 0.9);
+
+  // Subtle sun-glow in upper-right
+  vec2 sunDir = normalize(vec2(FC) - vec2(R.x*0.75, R.y*0.82));
+  float sunDist = length(FC/R - vec2(0.75,0.82));
+  col += vec3(1.0,0.97,0.88) * 0.08 * exp(-sunDist * 8.0);
+
+  O = vec4(clamp(col, 0.0, 1.0), 1.0);
+}`;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// useShaderCanvas — pure WebGL2, no Three.js
+// ─────────────────────────────────────────────────────────────────────────────
+function useShaderCanvas(ref: React.RefObject<HTMLCanvasElement | null>) {
+    useEffect(() => {
+        const canvas = ref.current; if (!canvas) return;
+        const gl = canvas.getContext('webgl2'); if (!gl) return;
+
+        const compile = (type: number, src: string) => {
+            const s = gl.createShader(type)!;
+            gl.shaderSource(s, src); gl.compileShader(s);
+            if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) console.error(gl.getShaderInfoLog(s));
+            return s;
+        };
+        const vert = compile(gl.VERTEX_SHADER, `#version 300 es\nin vec4 position;\nvoid main(){gl_Position=position;}`);
+        const frag = compile(gl.FRAGMENT_SHADER, SKY_SHADER);
+        const prog = gl.createProgram()!;
+        gl.attachShader(prog, vert); gl.attachShader(prog, frag); gl.linkProgram(prog);
+        gl.useProgram(prog);
+
+        const buf = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, 1, -1, -1, 1, 1, 1, -1]), gl.STATIC_DRAW);
+        const pos = gl.getAttribLocation(prog, 'position');
+        gl.enableVertexAttribArray(pos);
+        gl.vertexAttribPointer(pos, 2, gl.FLOAT, false, 0, 0);
+
+        const uRes = gl.getUniformLocation(prog, 'resolution');
+        const uTime = gl.getUniformLocation(prog, 'time');
+
+        const resize = () => {
+            const d = Math.min(window.devicePixelRatio, 2);
+            canvas.width = window.innerWidth * d;
+            canvas.height = window.innerHeight * d;
+            gl.viewport(0, 0, canvas.width, canvas.height);
+        };
+        resize(); window.addEventListener('resize', resize);
+
+        let raf: number;
+        const render = (t: number) => {
+            gl.uniform2f(uRes, canvas.width, canvas.height);
+            gl.uniform1f(uTime, t * 0.001);
+            gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+            raf = requestAnimationFrame(render);
+        };
+        raf = requestAnimationFrame(render);
+
+        return () => { cancelAnimationFrame(raf); window.removeEventListener('resize', resize); };
+    }, [ref]);
+}
+
+
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Hero component
+// ─────────────────────────────────────────────────────────────────────────────
 export default function HeroCanvas() {
+    const shaderRef = useRef<HTMLCanvasElement>(null);
+    const router = useRouter();
+
+    useShaderCanvas(shaderRef);
+
     return (
-        <section className="relative w-full h-screen overflow-hidden bg-primary-background flex items-center justify-center">
-            {/* WebGL Canvas Layer */}
-            <div className="absolute inset-0 z-0 opacity-80 pointer-events-auto">
-                <Canvas camera={{ position: [0, 4, 12], fov: 50 }}>
-                    <fog attach="fog" args={['#0B1120', 5, 25]} />
-                    <ParticleWave />
-                    <OrbitControls
-                        enableZoom={false}
-                        enablePan={false}
-                        maxPolarAngle={Math.PI / 2 + 0.1}
-                        minPolarAngle={Math.PI / 3}
-                    />
-                </Canvas>
-            </div>
+        <div
+            className="relative w-full h-screen overflow-hidden"
+            style={{ marginTop: '-56px' }}
+        >
+            {/* Layer 1: sky + cloud GLSL shader */}
+            <canvas ref={shaderRef} className="absolute inset-0 w-full h-full" />
 
-            {/* Foreground Content */}
-            <div className="relative z-10 flex flex-col items-center justify-center text-center px-4 max-w-5xl mx-auto pointer-events-none mt-16">
-                <div className="inline-block mb-4 px-4 py-1.5 rounded-full border border-healing-teal/30 bg-healing-teal/5 backdrop-blur-md">
-                    <span className="text-healing-teal font-medium text-sm tracking-wide uppercase">Elite Recovery & Alignment</span>
+            {/* Layer 3: Hero content */}
+            <div
+                className="absolute inset-0 z-10 flex flex-col items-center justify-center text-white"
+                style={{ paddingTop: '56px' }}
+            >
+                {/* Trust badge */}
+                <div className="mb-6 animate-fade-in-down">
+                    <div className="flex items-center gap-2 px-5 py-2 rounded-full border text-sm"
+                        style={{ backgroundColor: 'rgba(255,255,255,0.18)', backdropFilter: 'blur(12px)', borderColor: 'rgba(255,255,255,0.35)', color: '#fff' }}>
+                        <span className="text-yellow-300">★</span>
+                        <span style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>Physiotherapy &amp; Cancer Rehab · Pune</span>
+                    </div>
                 </div>
-                <h1 className="text-5xl md:text-7xl lg:text-8xl font-extrabold text-white tracking-tight mb-6 drop-shadow-2xl">
-                    Reclaim Your <br />
-                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-healing-teal to-trust-blue">
-                        Mobility
-                    </span>
-                </h1>
-                <p className="text-base md:text-xl text-slate-300 max-w-2xl mb-10 leading-relaxed font-light drop-shadow-md">
-                    Experience advanced physiotherapy and cancer rehab powered by technology. Healing and alignment optimized for your unique recovery journey.
-                </p>
 
-                <button className="pointer-events-auto group relative px-8 py-4 bg-transparent overflow-hidden rounded-full border border-healing-teal/60 hover:border-healing-teal transition-all duration-300 shadow-[0_0_20px_rgba(45,212,191,0.15)] hover:shadow-[0_0_30px_rgba(45,212,191,0.4)]">
-                    <div className="absolute inset-0 bg-healing-teal/10 group-hover:bg-healing-teal/20 transition-all duration-300"></div>
-                    <div className="absolute -inset-4 bg-healing-teal/40 blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                    <span className="relative font-bold text-healing-teal tracking-wide shadow-sm flex items-center gap-2">
-                        Book Appointment
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-arrow-right transition-transform group-hover:translate-x-1"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
-                    </span>
-                </button>
+                <div className="text-center max-w-5xl mx-auto px-4">
+                    {/* Line 1 */}
+                    <h1
+                        className="font-bold animate-fade-in-up animation-delay-200"
+                        style={{
+                            fontFamily: 'Plus Jakarta Sans, sans-serif',
+                            fontSize: 'clamp(2.8rem, 6.5vw, 5rem)',
+                            lineHeight: 1.0,
+                            letterSpacing: '-0.035em',
+                            color: '#fff',
+                            textShadow: '0 2px 20px rgba(0,60,150,0.35)',
+                        }}
+                    >
+                        Reclaim your
+                    </h1>
+
+                    {/* Line 2 — giant Cormorant italic */}
+                    <h1
+                        className="animate-fade-in-up animation-delay-400"
+                        style={{
+                            fontFamily: 'Cormorant Garamond, Georgia, serif',
+                            fontStyle: 'italic',
+                            fontWeight: 600,
+                            fontSize: 'clamp(5rem, 13vw, 10rem)',
+                            lineHeight: 0.88,
+                            letterSpacing: '-0.02em',
+                            color: '#fff',
+                            textShadow: '0 4px 32px rgba(0,60,150,0.4)',
+                        }}
+                    >
+                        Movement.
+                    </h1>
+
+                    {/* Subtitle */}
+                    <p
+                        className="max-w-xl mx-auto mt-7 mb-0 animate-fade-in-up animation-delay-600"
+                        style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '1.1rem', color: 'rgba(255,255,255,0.85)', lineHeight: 1.75 }}
+                    >
+                        Evidence-based physiotherapy and cancer rehabilitation
+                        delivered with precision and genuine care in Pune.
+                    </p>
+
+                    {/* CTAs */}
+                    <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8 animate-fade-in-up animation-delay-800">
+                        <Link
+                            href="/booking"
+                            className="px-8 py-4 rounded-full font-bold text-base transition-all duration-300 hover:scale-105"
+                            style={{
+                                fontFamily: 'Plus Jakarta Sans, sans-serif',
+                                backgroundColor: '#2D5BE3',
+                                color: '#fff',
+                                boxShadow: '0 8px 28px rgba(45,91,227,0.4)',
+                            }}
+                        >
+                            Book Appointment →
+                        </Link>
+                        <button
+                            onClick={() => router.push('/#services')}
+                            className="px-8 py-4 rounded-full font-semibold text-base transition-all duration-300 hover:scale-105"
+                            style={{
+                                fontFamily: 'Plus Jakarta Sans, sans-serif',
+                                backgroundColor: 'rgba(255,255,255,0.18)',
+                                backdropFilter: 'blur(10px)',
+                                border: '1px solid rgba(255,255,255,0.35)',
+                                color: '#fff',
+                            }}
+                        >
+                            Our Services
+                        </button>
+                    </div>
+
+                    {/* Trust bar */}
+                    <div className="flex items-center justify-center gap-2 mt-6 text-sm animate-fade-in-up animation-delay-800"
+                        style={{ color: 'rgba(255,255,255,0.7)', fontFamily: 'DM Sans, sans-serif' }}>
+                        <span className="text-yellow-400">★★★★★</span>
+                        <span className="font-semibold" style={{ color: '#fff' }}>5.0</span>
+                        <span>·</span><span>120+ Google Reviews</span><span>·</span><span>Pune</span>
+                    </div>
+                </div>
             </div>
-        </section>
+        </div>
     );
 }

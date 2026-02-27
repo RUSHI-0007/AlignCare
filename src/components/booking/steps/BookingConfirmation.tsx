@@ -23,51 +23,51 @@ export default function BookingConfirmation() {
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ type: "spring", stiffness: 200, damping: 20 }}
-                className="w-24 h-24 bg-healing-teal/20 rounded-full flex items-center justify-center mb-8 relative"
+                className="w-24 h-24 bg-emerald-100 rounded-full flex items-center justify-center mb-8 relative"
             >
-                <div className="absolute inset-0 bg-healing-teal blur-2xl opacity-20 rounded-full animate-pulse"></div>
-                <CheckCircle size={48} className="text-healing-teal relative z-10" />
+                <div className="absolute inset-0 bg-emerald-400 blur-2xl opacity-20 rounded-full animate-pulse"></div>
+                <CheckCircle size={48} className="text-emerald-500 relative z-10" />
             </motion.div>
 
-            <h2 className="text-3xl font-bold text-white mb-2 text-center">Booking Confirmed!</h2>
-            <p className="text-slate-400 mb-10 text-center max-w-md">
+            <h2 className="text-3xl font-bold text-clinic-navy mb-2 text-center">Booking Confirmed!</h2>
+            <p className="text-clinic-muted mb-10 text-center max-w-md">
                 Thank you, {patientDetails.name.split(' ')[0]}. Your appointment has been successfully scheduled. We've sent a confirmation email with details.
             </p>
 
-            <div className="w-full bg-white/5 border border-white/10 rounded-3xl p-6 backdrop-blur-xl mb-10">
-                <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-6 pb-4 border-b border-white/10">
+            <div className="w-full bg-white border border-[#E2E8F0] shadow-sm rounded-3xl p-6 mb-10">
+                <h3 className="text-sm font-semibold text-clinic-muted uppercase tracking-wider mb-6 pb-4 border-b border-[#E2E8F0]">
                     Appointment Summary
                 </h3>
 
                 <div className="space-y-6">
                     <div className="flex items-start gap-4">
-                        <div className="p-3 bg-white/5 rounded-xl text-trust-blue">
+                        <div className="p-3 bg-clinic-blue-50 rounded-xl text-clinic-blue-600">
                             <Calendar size={24} />
                         </div>
                         <div>
-                            <p className="text-sm text-slate-400 mb-1">Date</p>
-                            <p className="text-lg font-medium text-white">{format(new Date(selectedDate), 'EEEE, MMMM do, yyyy')}</p>
+                            <p className="text-sm text-clinic-muted mb-1">Date</p>
+                            <p className="text-lg font-medium text-clinic-navy">{format(new Date(selectedDate), 'EEEE, MMMM do, yyyy')}</p>
                         </div>
                     </div>
 
                     <div className="flex items-start gap-4">
-                        <div className="p-3 bg-white/5 rounded-xl text-healing-teal">
+                        <div className="p-3 bg-teal-50 rounded-xl text-teal-600">
                             <Clock size={24} />
                         </div>
                         <div>
-                            <p className="text-sm text-slate-400 mb-1">Time</p>
-                            <p className="text-lg font-medium text-white">{selectedTime}</p>
+                            <p className="text-sm text-clinic-muted mb-1">Time</p>
+                            <p className="text-lg font-medium text-clinic-navy">{selectedTime}</p>
                         </div>
                     </div>
 
                     <div className="flex items-start gap-4">
-                        <div className="p-3 bg-white/5 rounded-xl text-purple-400">
+                        <div className="p-3 bg-indigo-50 rounded-xl text-indigo-600">
                             <MapPin size={24} />
                         </div>
                         <div>
-                            <p className="text-sm text-slate-400 mb-1">Location</p>
-                            <p className="text-lg font-medium text-white capitalize">{visitType === 'HOME' ? 'Home Visit' : 'Aligncare Clinic'}</p>
-                            <p className="text-sm text-slate-400 capitalize">{serviceType?.replace('_', ' ')} Treatment</p>
+                            <p className="text-sm text-clinic-muted mb-1">Location</p>
+                            <p className="text-lg font-medium text-clinic-navy capitalize">{visitType === 'HOME' ? 'Home Visit' : 'Aligncare Clinic'}</p>
+                            <p className="text-sm text-clinic-muted capitalize">{serviceType?.replace('_', ' ')} Treatment</p>
                         </div>
                     </div>
                 </div>
@@ -75,7 +75,7 @@ export default function BookingConfirmation() {
 
             <button
                 onClick={handleReturnHome}
-                className="px-8 py-3 rounded-full font-semibold bg-white/5 border border-white/10 hover:bg-white/10 text-white transition-all w-full md:w-auto"
+                className="px-8 py-3 rounded-full font-semibold bg-white border border-[#E2E8F0] hover:bg-slate-50 text-clinic-navy transition-all shadow-sm hover:shadow-md w-full md:w-auto"
             >
                 Return to Home
             </button>

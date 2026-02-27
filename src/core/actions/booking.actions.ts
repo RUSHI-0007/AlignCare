@@ -7,7 +7,8 @@ import {
     getShiftForTime
 } from '@/core/services/appointment.service';
 import { getAvailableSlotsForDate, getBookedTimesFromDB, getBlockedTimesFromDB } from '@/core/services/appointment_db.service';
-import { createClient } from '@/core/db/supabase-server';
+import { createAdminClient } from '@/core/db/supabase-server';
+import { format } from 'date-fns';
 
 export async function getAvailableSlots(dateString: string) {
     try {
@@ -39,7 +40,7 @@ export async function createAppointmentAction(formData: {
         // No skipPastCheck here → 2-hour buffer enforced for public bookings
         validateSlotOrThrow(dateStr, timeStr, bookedTimes, blockedTimes);
 
-        const supabase = createClient();
+        const supabase = createAdminClient();
 
         // Step 3: Upsert patient by phone (deduplication)
         const { data: patient, error: patientError } = await supabase
@@ -72,6 +73,9 @@ export async function createAppointmentAction(formData: {
 
         // error code 23505 = unique constraint violation = double booking caught at DB
         if (apptError?.code === '23505') {
+            console.error('\n====[DB UNIQUE VIOLATION (23505)]====');
+            console.error(apptError);
+            console.error('======================================\n');
             return { success: false, error: 'SLOT_JUST_TAKEN' };
         }
         if (apptError) throw new Error(apptError.message);
@@ -81,26 +85,39 @@ export async function createAppointmentAction(formData: {
         revalidatePath('/admin/dashboard');
         revalidatePath('/admin/appointments');
 
-        return { success: true, appointmentId: appointment.id };
+        return { success: true, appointmentId: appointment?.id };
 
     } catch (err: unknown) {
-        if (err instanceof Error && (
-            err.message?.startsWith('INVALID_SLOT') ||
-            err.message?.startsWith('PAST_SLOT') ||
-            err.message?.startsWith('BUFFER_VIOLATION') ||
-            err.message?.startsWith('SLOT_TAKEN')
-        )) {
-            return { success: false, error: err.message };
+        console.error('\n====[createAppointmentAction: ERROR TRACE]====');
+        console.error('Payload:', JSON.stringify(formData, null, 2));
+        console.error('Error object:', err);
+
+        if (err instanceof Error) {
+            console.error('Error Message:', err.message);
+            console.error('Error Stack:', err.stack);
+
+            if (
+                err.message?.startsWith('INVALID_SLOT') ||
+                err.message?.startsWith('PAST_SLOT') ||
+                err.message?.startsWith('BUFFER_VIOLATION') ||
+                err.message?.startsWith('SLOT_TAKEN')
+            ) {
+                return { success: false, error: err.message };
+            }
         }
-        console.error('[createAppointmentAction]', err);
-        return { success: false, error: 'SERVER_ERROR' };
+        console.error('==============================================\n');
+        return { success: false, error: `SERVER_ERROR_DETAIL: ${err instanceof Error ? err.message : String(err)}` };
     }
 }
 
 // Ensure the old confirmBooking works using the new internal API
 export async function confirmBooking(data: { date: string, time: string, serviceType: string, visitType: string, patient: { name: string, phone: string, email?: string, issue?: string } }) {
+    // data.date is an ISO string (e.g. 2026-02-25T18:30Z for Feb 26 in IST).
+    // Convert it back to local YYYY-MM-DD format as expected by Postgres and the UI validator.
+    const localDateStr = format(new Date(data.date), 'yyyy-MM-dd');
+
     return createAppointmentAction({
-        dateStr: data.date,
+        dateStr: localDateStr,
         timeStr: data.time,
         serviceType: (data.serviceType === 'post-surgery' ? 'PHYSIOTHERAPY' : (data.serviceType.toUpperCase().replace('-', '_'))) as 'PHYSIOTHERAPY' | 'CANCER_REHAB' | 'HOME_VISIT',
         visitType: data.visitType.toUpperCase() as 'CLINIC' | 'HOME',
