@@ -148,7 +148,7 @@ export default function HeroCanvas() {
                         className="font-bold animate-fade-in-up animation-delay-200"
                         style={{
                             fontFamily: 'Plus Jakarta Sans, sans-serif',
-                            fontSize: 'clamp(2.8rem, 6.5vw, 5rem)',
+                            fontSize: 'clamp(2.4rem, 6.5vw, 5rem)',
                             lineHeight: 1.0,
                             letterSpacing: '-0.035em',
                             color: '#fff',
@@ -165,7 +165,7 @@ export default function HeroCanvas() {
                             fontFamily: 'Cormorant Garamond, Georgia, serif',
                             fontStyle: 'italic',
                             fontWeight: 600,
-                            fontSize: 'clamp(5rem, 13vw, 10rem)',
+                            fontSize: 'clamp(4.2rem, 13vw, 10rem)',
                             lineHeight: 0.88,
                             letterSpacing: '-0.02em',
                             color: '#fff',
