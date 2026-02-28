@@ -112,9 +112,11 @@ export async function createAppointmentAction(formData: {
 
 // Ensure the old confirmBooking works using the new internal API
 export async function confirmBooking(data: { date: string, time: string, serviceType: string, visitType: string, patient: { name: string, phone: string, email?: string, issue?: string } }) {
-    // data.date is an ISO string (e.g. 2026-02-25T18:30Z for Feb 26 in IST).
-    // Convert it back to local YYYY-MM-DD format as expected by Postgres and the UI validator.
-    const localDateStr = format(new Date(data.date), 'yyyy-MM-dd');
+    // If the input is already 'YYYY-MM-DD', use it directly to avoid Server-local timezone shifts on Vercel.
+    // Otherwise, parse it defensively.
+    const localDateStr = data.date.length === 10 && data.date.includes('-')
+        ? data.date
+        : format(new Date(data.date), 'yyyy-MM-dd');
 
     return createAppointmentAction({
         dateStr: localDateStr,

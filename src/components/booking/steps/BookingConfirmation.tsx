@@ -17,6 +17,12 @@ export default function BookingConfirmation() {
 
     if (!selectedDate || !selectedTime) return null;
 
+    // Parse securely to avoid timezone shifts when displaying the formatted string
+    const getLocalDate = (dateStr: string) => {
+        const [year, month, day] = dateStr.split('-').map(Number);
+        return new Date(year, month - 1, day);
+    };
+
     return (
         <div className="flex flex-col items-center justify-center py-8">
             <motion.div
@@ -46,7 +52,7 @@ export default function BookingConfirmation() {
                         </div>
                         <div>
                             <p className="text-sm text-clinic-muted mb-1">Date</p>
-                            <p className="text-lg font-medium text-clinic-navy">{format(new Date(selectedDate), 'EEEE, MMMM do, yyyy')}</p>
+                            <p className="text-lg font-medium text-clinic-navy">{format(getLocalDate(selectedDate), 'EEEE, MMMM do, yyyy')}</p>
                         </div>
                     </div>
 

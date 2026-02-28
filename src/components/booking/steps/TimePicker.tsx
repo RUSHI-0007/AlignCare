@@ -15,10 +15,13 @@ export default function TimePicker() {
     const [slots, setSlots] = useState<string[]>([]);
     const [loading, setLoading] = useState(false);
 
-    // Convert stored ISO string back to Date object for the picker
-    const [pickerDate, setPickerDate] = useState<Date | undefined>(
-        selectedDate ? new Date(selectedDate) : undefined
-    );
+    // Convert stored YYYY-MM-DD string back to a clean local Date object for the picker
+    const [pickerDate, setPickerDate] = useState<Date | undefined>(() => {
+        if (!selectedDate) return undefined;
+        // Parse locally to avoid timezone shift on 'YYYY-MM-DD' UTC parsing
+        const [year, month, day] = selectedDate.split('-').map(Number);
+        return new Date(year, month - 1, day);
+    });
 
     useEffect(() => {
         if (!pickerDate) return;
@@ -37,8 +40,8 @@ export default function TimePicker() {
         };
 
         fetchSlots();
-        // Update store with new date
-        setSelectedDate(pickerDate.toISOString());
+        // Update store with new date as YYYY-MM-DD to prevent timezone offset shifts on server
+        setSelectedDate(format(pickerDate, 'yyyy-MM-dd'));
 
         // If new date doesn't have the old time slot, clear time
         if (!slots.includes(selectedTime || '')) {
